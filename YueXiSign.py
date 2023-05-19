@@ -4,7 +4,7 @@ from bs4 import BeautifulSoup
 
 
 def get_now():
-    return datetime.datetime.now().strftime("%y/%m/%d %H:%M:%S)
+    return datetime.datetime.now().strftime("%y/%m/%d %H:%M:%S")
 
 
 class YueXiAutoSign:
