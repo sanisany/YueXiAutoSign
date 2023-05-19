@@ -107,4 +107,5 @@ class YueXiAutoSign:
 
 
 if __name__ == "__main__":
-    YueXiAutoSign("用户名", "密码", is_email=True).start()
+    #YueXiAutoSign("用户名","密码").start()
+    YueXiAutoSign("邮箱", "密码", is_email=True).start()
