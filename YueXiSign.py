@@ -4,7 +4,7 @@ from bs4 import BeautifulSoup
 
 
 def get_now():
-    return datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
+    return datetime.datetime.now().strftime("%y/%m/%d %H:%M:%S)
 
 
 class YueXiAutoSign:
@@ -42,7 +42,7 @@ class YueXiAutoSign:
             self._login_form_data["loginfield"] = "email"
         else:
             self._login_form_data["loginfield"] = "username"
-        self.message = f"账号:{username}\n"
+        self.message = f"月曦论坛签到\n账号:{username}\n"
 
     def _pick_login_hash(self):
         html = self._session.get(url=self._login_page, params={"mod": "logging", "action": "login"}).text
@@ -92,16 +92,17 @@ class YueXiAutoSign:
     def start(self):
         login_status = self.login()
         if not login_status:
-            self.message += f"{get_now()}--登录失败"
+            self.message += f"{get_now()}\n状态:登录失败\n"
             print(self.message)
             return
         sign_status = self.sign()
         if sign_status == 0:
-            self.message += f"{get_now()}--今日已经签到\n"
+            self.message += f"{get_now()}\n状态:今日已经签到\n"
         elif sign_status == 1:
-            self.message += f"{get_now()}--签到成功\n"
+            self.message += f"{get_now()}\n状态:签到成功\n"
         else:
-            self.message += f"{get_now()}--签到失败\n"
+            self.message += f"{get_now()}\n状态:签到失败\n"
+        self.message += "-----------------\npowered by lolita"
         print(self.message)
 
 
