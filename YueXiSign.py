@@ -102,7 +102,6 @@ class YueXiAutoSign:
             self.message += f"{get_now()}\n状态:签到成功\n"
         else:
             self.message += f"{get_now()}\n状态:签到失败\n"
-        self.message += "-----------------\npowered by lolita"
         print(self.message)
 
 
