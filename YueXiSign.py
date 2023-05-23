@@ -75,10 +75,10 @@ class YueXiAutoSign:
         sign_hash = self._get_sign_hash()
         self._sign_header["cookie"] = self._solve_cookie()
         response = self._session.get(url=self._sign_url, headers=self._sign_header,
-                                     params={"id": "gsignin:index", "action": "signin", "formhash": sign_hash}).text
-        if "签到成功" in response:
+                                     params={"id": "k_misign:sign", "operation": "qiandao", "format": "global_usernav_extra", "inajax": 1, "ajaxtarget": "k_misign_topb", "formhash": sign_hash}).text
+        if 'alt="今日已签"' in response:
             return 1
-        elif "您今天已经签过到了" in response:
+        elif "<![CDATA[今日已签]]>" in response:
             return 0
         else:
             return -1
