@@ -1,6 +1,7 @@
 import datetime
 import requests
 from bs4 import BeautifulSoup
+import hashlib
 
 
 def get_now():
@@ -15,7 +16,7 @@ class YueXiAutoSign:
     # 签到地址
     _sign_url = "https://bbs.wcccc.cc/plugin.php"  # GET
 
-    _login_form_data = {"referer": "https://bbs.wcccc.cc/./", "questionid": 0, "answer": ""}
+    _login_form_data = {"referer": "https://bbs.wcccc.cc/", "questionid": 0, "answer": "", "cookietime": "2592000"}
 
     _login_params = {"mod": "logging","action": "login","loginsubmit": "yes","inajax": 1}
 
@@ -35,7 +36,7 @@ class YueXiAutoSign:
     def __init__(self, username, password, is_email=False):
         self._session = requests.session()
         self._username = username
-        self._password = password
+        self._password = hashlib.md5(password.encode()).hexdigest()
         self._login_form_data["username"] = username
         self._login_form_data["password"] = password
         if is_email:
@@ -44,7 +45,7 @@ class YueXiAutoSign:
             self._login_form_data["loginfield"] = "username"
         self.message = f"月曦论坛签到\n账号:{username}\n"
 
-    def _pick_login_hash(self):
+    def _get_login_hash(self):
         html = self._session.get(url=self._login_page, params={"mod": "logging", "action": "login"}).text
         soup = BeautifulSoup(html, 'html.parser')
         form_tag = soup.find("form", {"name": "login"})
@@ -53,7 +54,7 @@ class YueXiAutoSign:
         return login_form_hash, login_hash_value
 
     def login(self):
-        hashes = self._pick_login_hash()
+        hashes = self._get_login_hash()
         self._login_form_data["formhash"] = hashes[0]
         self._login_params["loginhash"] = hashes[1]
         self._login_header["cookie"] = self._solve_cookie()
@@ -65,7 +66,7 @@ class YueXiAutoSign:
 
     def _get_sign_hash(self):
         self._sign_header["cookie"] = self._solve_cookie()
-        html = self._session.get(url=self._sign_url, params={"id": "gsignin:index"}, headers=self._sign_header).text
+        html = self._session.get(url=self._sign_url, params={"id": "k_misign:sign"}, headers=self._sign_header).text
         soup = BeautifulSoup(html, 'html.parser')
         form_tag = soup.find("form", {"id": "scbar_form"})
         sign_form_hash = form_tag.find("input", {"name": "formhash", "type": "hidden"}).get("value")
@@ -74,7 +75,7 @@ class YueXiAutoSign:
     def sign(self):
         sign_hash = self._get_sign_hash()
         self._sign_header["cookie"] = self._solve_cookie()
-        response = self._session.get(url=self._sign_url, headers=self._sign_header,params={"id": "k_misign:sign", "operation": "qiandao", "format": "global_usernav_extra", "inajax": 1, "ajaxtarget": "k_misign_topb", "formhash": sign_hash}).text
+        response = self._session.get(url=self._sign_url, headers=self._sign_header,params={"id": "k_misign:sign", "operation": "qiandao", "format": "empty", "inajax": 1, "ajaxtarget": "JD_sign", "formhash": sign_hash}).text
         if 'alt="今日已签"' in response:
             return 1
         elif "<![CDATA[今日已签]]>" in response:
