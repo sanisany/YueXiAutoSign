@@ -15,6 +15,8 @@ class YueXiAutoSign:
     _login_url = "https://bbs.wcccc.cc/member.php"  # POST
     # 签到地址
     _sign_url = "https://bbs.wcccc.cc/plugin.php"  # GET
+    # 签到页面
+    _sign_page_url = "https://bbs.wcccc.cc/plugin.php?id=k_misign:sign" # GET
 
     _login_form_data = {"referer": "https://bbs.wcccc.cc/", "questionid": 0, "answer": "", "cookietime": "2592000"}
 
@@ -34,6 +36,7 @@ class YueXiAutoSign:
     }
 
     def __init__(self, username, password, is_email=False):
+        self._rank = None
         self._session = requests.session()
         self._username = username
         self._password = hashlib.md5(password.encode()).hexdigest()
@@ -76,12 +79,22 @@ class YueXiAutoSign:
         sign_hash = self._get_sign_hash()
         self._sign_header["cookie"] = self._solve_cookie()
         response = self._session.get(url=self._sign_url, headers=self._sign_header,params={"id": "k_misign:sign", "operation": "qiandao", "format": "empty", "inajax": 1, "ajaxtarget": "JD_sign", "formhash": sign_hash}).text
-        if 'alt="今日已签"' in response:
-            return 1
-        elif "<![CDATA[今日已签]]>" in response:
+        success = self.check_sign()
+        if "<![CDATA[今日已签]]>" in response:
             return 0
         else:
+            if success:
+                return 1
             return -1
+
+    def check_sign(self):
+        page_html = self._session.get(url=self._sign_page_url).text
+        bs = BeautifulSoup(page_html, 'html.parser')
+        qd_rank = bs.find("input", attrs={"id": "qiandaobtnnum"}).get("value")
+        if int(qd_rank) > 0:
+            self._rank = qd_rank
+            return True
+        return False
 
     def _solve_cookie(self):
         cookies = self._session.cookies.get_dict()
@@ -97,9 +110,9 @@ class YueXiAutoSign:
             return
         sign_status = self.sign()
         if sign_status == 0:
-            self.message += f"{get_now()}\n状态:今日已经签到\n"
+            self.message += f"{get_now()}\n状态:今日已经签到\n签到排名:{self._rank}\n"
         elif sign_status == 1:
-            self.message += f"{get_now()}\n状态:签到成功\n"
+            self.message += f"{get_now()}\n状态:签到成功\n签到排名:{self._rank}\n"
         else:
             self.message += f"{get_now()}\n状态:签到失败\n"
         print(self.message)
@@ -108,3 +121,4 @@ class YueXiAutoSign:
 if __name__ == "__main__":
     #YueXiAutoSign("用户名","密码").start()
     YueXiAutoSign("邮箱", "密码", is_email=True).start()
+
